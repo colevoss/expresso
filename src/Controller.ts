@@ -1,10 +1,16 @@
 import { Router } from 'express';
+import { Logger } from './Logger';
 import 'reflect-metadata';
 
 type ClassType = { new (...args: any[]): {} };
 
-export function Controller(path: string) {
+export function Route(path: string) {
   return function<T extends ClassType>(target: T) {
-    Reflect.defineMetadata('basePath', `/${path}`, target.prototype);
+    const basePath = `/${path}`;
+    Reflect.defineMetadata('basePath', basePath, target.prototype);
+
+    // const routeLogger = Logger({ route: basePath });
+
+    // Reflect.defineMetadata('routeLogger', routeLogger, target.prototype);
   };
 }
