@@ -8,10 +8,11 @@
     "dist/**/*"
   ],
   "scripts": {
-    "prepare": "npm run tsc",
+    "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "version": "git add -A src",
     "postversion": "git push && git push --tags",
+    "build": "rimraf dist && npm run tsc",
     "tsc": "tsc",
     "dev": "nodemon",
     "test": "NODE_ENV=test jest"
@@ -30,6 +31,7 @@
     "express": "^4.17.1",
     "jest": "^24.9.0",
     "nodemon": "^1.19.1",
+    "rimraf": "^3.0.0",
     "supertest": "^4.0.2",
     "ts-jest": "^24.0.2",
     "ts-node": "^8.3.0",
