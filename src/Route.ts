@@ -23,6 +23,6 @@ export abstract class RouteClass {
   // }
 
   init(server: Server) {
-    this.logger = server.logger.child({ name: this.route });
+    this.logger = server.logger.child({ route: this.route });
   }
 }

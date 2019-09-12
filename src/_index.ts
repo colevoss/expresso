@@ -15,14 +15,10 @@ class AdioServer extends Server {
 }
 
 // @Route('test')
-class TestController extends RouteClass {
-  // @Get('/hello')
-  // test() {
-  //   return 'hello';
-  // }
+class TestRoute extends RouteClass {
   public route = 'test';
 
-  @Get('/')
+  @Get('/hello')
   // @ValidateBody({ ball: Schema.string })
   async hello(
     req: express.Request,
@@ -45,7 +41,7 @@ const start = () => {
   // const adio = AdioServer.create(3000, [TestController]);
   const adio = AdioServer.create(3000);
 
-  adio.registerRoutes([TestController]);
+  adio.registerRoutes([TestRoute]);
 
   adio.start();
 };

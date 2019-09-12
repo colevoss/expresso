@@ -65,7 +65,7 @@ export abstract class Server {
     const router = express.Router();
     const routePrototype = Object.getPrototypeOf(route);
     // const baseRoute = Reflect.getMetadata('basePath', routePrototype);
-    const baseRoute = route.route;
+    const baseRoute = '/' + route.route;
 
     const routeActions = Object.getOwnPropertyNames(routePrototype);
 
@@ -89,7 +89,7 @@ export abstract class Server {
       >;
 
       // @ts-ignore
-      const actionFn = route[actionFnName];
+      const actionFn = route[actionFnName].bind(route);
 
       const handler = async (req: express.Request, res: express.Response) => {
         const sendFn: SendFn<T> = <T>(
@@ -123,6 +123,8 @@ export abstract class Server {
 
       router[path.mimeType](path.path, middleware, handler);
 
+      console.log(router);
+
       this.logger.info(
         {
           type: path.mimeType.toUpperCase(),
@@ -134,7 +136,6 @@ export abstract class Server {
     }
 
     this.app.use(baseRoute, router);
-    console.log(this.app);
     this.logger.info({ baseRoute }, 'Route Registered');
   }
 
