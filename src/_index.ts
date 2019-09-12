@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { Route } from './Route';
+import { Route, RouteClass } from './Route';
 import { ValidateBody } from './ValidateBody';
 import { Schema } from 'schrema';
 import { Get, Post } from './Action';
@@ -14,15 +14,16 @@ class AdioServer extends Server {
   public test = 'another hello';
 }
 
-@Route('test')
-class TestController {
+// @Route('test')
+class TestController extends RouteClass {
   // @Get('/hello')
   // test() {
   //   return 'hello';
   // }
+  public route = 'test';
 
-  @Get('/rando/:id')
-  @ValidateBody({ ball: Schema.string })
+  @Get('/')
+  // @ValidateBody({ ball: Schema.string })
   async hello(
     req: express.Request,
     send: SendFn<{ test: string }>,
@@ -34,7 +35,7 @@ class TestController {
 
     send(data);
 
-    server.logger.info('test');
+    this.logger.info(server.test, 'test');
     // send(null, new Error('Test'), 404);
   }
 }

@@ -5,6 +5,7 @@ import 'reflect-metadata';
 
 import { Controller, ControllerClass, IActionMetadata } from './types';
 import { Logger as ILogger } from 'pino';
+import { RouteClass } from './Route';
 
 export type SendFn<Data> = (data?: Data, error?: Error, code?: number) => void;
 
@@ -18,9 +19,9 @@ export abstract class Server {
 
   constructor(public port: number) {
     this.app = express();
-    this.logger = Logger({ name: this.name || 'Server' });
+    // this.logger = Logger({ name: this.name || 'Server' });
 
-    this.bootstrapApp();
+    // this.bootstrapApp();
   }
 
   static create<S extends Server>(
@@ -30,6 +31,8 @@ export abstract class Server {
   ): S {
     const server = new this(port);
 
+    server.bootstrapApp();
+
     if (routes) {
       server.registerRoutes(routes);
     }
@@ -37,22 +40,32 @@ export abstract class Server {
     return server;
   }
 
-  private bootstrapApp() {
+  protected bootstrapApp() {
+    this.logger = Logger({ name: this.name || 'Server' });
     this.app.use(express.json());
     this.app.use(helmet());
   }
 
   public start() {
     this.app.listen(this.port, () => {
-      this.logger.info({ port: this.port }, 'Server started and listening');
+      this.logger.info(
+        { port: this.port },
+        `${this.name} started and listening`,
+      );
     });
   }
 
-  public registerRoute<T>(routeType: ControllerClass<T>) {
+  // public registerRoute<T>(routeType: ControllerClass<T>) {
+  public registerRoute<T extends new () => RouteClass>(
+    // routeType: ControllerClass<T>,
+    routeType: T,
+  ) {
     const route = new routeType();
+    route.init(this);
     const router = express.Router();
     const routePrototype = Object.getPrototypeOf(route);
-    const baseRoute = Reflect.getMetadata('basePath', routePrototype);
+    // const baseRoute = Reflect.getMetadata('basePath', routePrototype);
+    const baseRoute = route.route;
 
     const routeActions = Object.getOwnPropertyNames(routePrototype);
 
@@ -75,6 +88,7 @@ export abstract class Server {
         ControllerClass<T>
       >;
 
+      // @ts-ignore
       const actionFn = route[actionFnName];
 
       const handler = async (req: express.Request, res: express.Response) => {
@@ -120,10 +134,14 @@ export abstract class Server {
     }
 
     this.app.use(baseRoute, router);
+    console.log(this.app);
     this.logger.info({ baseRoute }, 'Route Registered');
   }
 
-  public registerRoutes<T>(routeTypes: ControllerClass<T>[]) {
+  public registerRoutes<T extends new () => RouteClass>(
+    // routeTypes: ControllerClass<T>[],
+    routeTypes: T[],
+  ) {
     for (const routeType of routeTypes) {
       this.registerRoute(routeType);
     }

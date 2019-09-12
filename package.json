@@ -8,6 +8,7 @@
     "dist/**/*"
   ],
   "scripts": {
+    "blah": "ts-node src/_index.ts",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "version": "git add -A src",
