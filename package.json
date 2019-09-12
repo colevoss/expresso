@@ -2,7 +2,7 @@
   "name": "expresso",
   "version": "1.0.0",
   "description": "Some neat decorators for express",
-  "main": "index.js",
+  "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
     "lib/**/*"
