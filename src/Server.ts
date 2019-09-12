@@ -6,16 +6,35 @@ import 'reflect-metadata';
 import { Controller, ControllerClass, IActionMetadata } from './types';
 import { Logger as ILogger } from 'pino';
 
+export type SendFn<Data> = (data?: Data, error?: Error, code?: number) => void;
+
+export const createServer = <S>() => {};
+
 export abstract class Server {
+  public name: string;
   public app: express.Application;
   public routes: { [baseRoute: string]: Controller<any> };
   public logger: ILogger;
 
-  constructor() {
+  constructor(public port: number) {
     this.app = express();
-    this.logger = Logger({ name: 'Server' });
+    this.logger = Logger({ name: this.name || 'Server' });
 
     this.bootstrapApp();
+  }
+
+  static create<S extends Server>(
+    this: { new (port: number): S },
+    port: number,
+    routes?: ControllerClass<any>[],
+  ): S {
+    const server = new this(port);
+
+    if (routes) {
+      server.registerRoutes(routes);
+    }
+
+    return server;
   }
 
   private bootstrapApp() {
@@ -23,9 +42,9 @@ export abstract class Server {
     this.app.use(helmet());
   }
 
-  public async start() {
-    this.app.listen(3000, () => {
-      this.logger.info({ port: 3000 }, 'Server started and listening');
+  public start() {
+    this.app.listen(this.port, () => {
+      this.logger.info({ port: this.port }, 'Server started and listening');
     });
   }
 
@@ -59,34 +78,49 @@ export abstract class Server {
       const actionFn = route[actionFnName];
 
       const handler = async (req: express.Request, res: express.Response) => {
-        try {
-          // @ts-ignore
-          const result = await actionFn(req);
+        const sendFn: SendFn<T> = <T>(
+          data: T,
+          error: Error = null,
+          code: number = 200,
+        ) => {
+          if (error) {
+            const errorResult = {
+              type: error.name,
+              message: error.message,
+            };
+
+            res.status(code).json({ error: errorResult });
+
+            return;
+          }
+
           const response = {
-            data: result,
+            data,
           };
 
-          res.json(response);
+          res.status(code).json(response);
 
           actionLogger.info(response);
-        } catch (e) {
-          const error = {
-            type: e.name,
-            message: e.message,
-          };
+        };
 
-          res.status(400).json({
-            error,
-          });
-
-          actionLogger.info({ error });
-        }
+        // @ts-ignore
+        await actionFn(req, sendFn, this);
       };
 
       router[path.mimeType](path.path, middleware, handler);
+
+      this.logger.info(
+        {
+          type: path.mimeType.toUpperCase(),
+          path: path.path,
+          route: baseRoute,
+        },
+        'Action Registered',
+      );
     }
 
     this.app.use(baseRoute, router);
+    this.logger.info({ baseRoute }, 'Route Registered');
   }
 
   public registerRoutes<T>(routeTypes: ControllerClass<T>[]) {
