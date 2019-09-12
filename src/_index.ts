@@ -33,6 +33,8 @@ class TestController {
     };
 
     send(data);
+
+    server.logger.info('test');
     // send(null, new Error('Test'), 404);
   }
 }

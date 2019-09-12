@@ -26,7 +26,6 @@
     "@types/helmet": "0.0.43",
     "@types/jest": "^24.0.18",
     "@types/node": "^12.7.1",
-    "@types/pino": "^5.8.8",
     "@types/supertest": "^2.0.8",
     "express": "^4.17.1",
     "jest": "^24.9.0",
@@ -42,6 +41,7 @@
     "url": "https://github.com/colevoss/expresso.git"
   },
   "dependencies": {
+    "@types/pino": "^5.8.10",
     "helmet": "^3.20.0",
     "pino": "^5.13.2",
     "pino-pretty": "^3.2.0",
