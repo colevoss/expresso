@@ -1,6 +1,6 @@
 {
   "name": "@colevoss/expresso",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Some neat decorators for express",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
