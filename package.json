@@ -1,14 +1,24 @@
 {
-  "name": "express-decs",
+  "name": "expresso",
   "version": "1.0.0",
-  "description": "",
+  "description": "Some neat decorators for express",
   "main": "index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
   "scripts": {
+    "prepare": "npm run tsc",
+    "prepublishOnly": "npm test",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags",
     "tsc": "tsc",
     "dev": "nodemon",
     "test": "NODE_ENV=test jest"
   },
-  "author": "",
+  "author": {
+    "name": "Cole Voss"
+  },
   "license": "ISC",
   "devDependencies": {
     "@types/express": "^4.17.0",
