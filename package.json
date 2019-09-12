@@ -2,10 +2,10 @@
   "name": "@colevoss/expresso",
   "version": "1.0.0",
   "description": "Some neat decorators for express",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "scripts": {
     "prepare": "npm run tsc",
