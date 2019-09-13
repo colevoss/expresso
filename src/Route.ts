@@ -13,16 +13,12 @@ export function Route(path: string) {
   };
 }
 
-export abstract class RouteClass {
+export abstract class RouteClass<S extends Server> {
   public route: string = '';
-  public logger: ILogger;
-  // public server: Server;
+  // public logger: ILogger;
+  public server: S;
 
-  // constructor(server: Server) {
-  //   this.server = server;
-  // }
-
-  init(server: Server) {
-    this.logger = server.logger.child({ route: this.route });
+  constructor(server: S) {
+    this.server = server;
   }
 }

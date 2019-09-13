@@ -1,43 +1,51 @@
 import * as express from 'express';
 import * as helmet from 'helmet';
 import { Logger } from './Logger';
+import { Context } from './Context';
 import 'reflect-metadata';
 
 import { Controller, ControllerClass, IActionMetadata } from './types';
 import { Logger as ILogger } from 'pino';
 import { RouteClass } from './Route';
 
-export type SendFn<Data> = (data?: Data, error?: Error, code?: number) => void;
-
-export const createServer = <S>() => {};
-
-export abstract class Server {
+export class Server {
   public name: string;
   public app: express.Application;
   public routes: { [baseRoute: string]: Controller<any> };
   public logger: ILogger;
 
-  constructor(public port: number) {
+  constructor() {
     this.app = express();
-    // this.logger = Logger({ name: this.name || 'Server' });
-
-    // this.bootstrapApp();
+    this.bootstrapApp();
   }
 
-  static create<S extends Server>(
-    this: { new (port: number): S },
-    port: number,
-    routes?: ControllerClass<any>[],
-  ): S {
-    const server = new this(port);
+  static async create<S extends Server>(
+    this: { new (): S },
+    // routes?: ControllerClass<any>[],
+    routes?: (new (server: S) => RouteClass<S>)[],
+  ): Promise<S> {
+    const server = new this();
 
-    server.bootstrapApp();
+    // server.bootstrapApp();
 
     if (routes) {
       server.registerRoutes(routes);
     }
 
+    await server.created();
+
     return server;
+  }
+
+  public async created(): Promise<void> {}
+
+  public async started(): Promise<void> {}
+
+  public contextFactory<B = {}, Q = {}>(
+    request: express.Request,
+    response: express.Response,
+  ): Context<B, Q> {
+    return new Context(request, response, this);
   }
 
   protected bootstrapApp() {
@@ -46,22 +54,27 @@ export abstract class Server {
     this.app.use(helmet());
   }
 
-  public start() {
-    this.app.listen(this.port, () => {
-      this.logger.info(
-        { port: this.port },
-        `${this.name} started and listening`,
-      );
+  public start(port: number) {
+    this.app.listen(port, () => {
+      this.logger.info({ port: port }, `${this.name} started and listening`);
+
+      this.started();
     });
   }
 
   // public registerRoute<T>(routeType: ControllerClass<T>) {
-  public registerRoute<T extends new () => RouteClass>(
+  public registerRoute<
+    // T extends new <S extends Server>(server: S) => RouteClass<S>
+    S extends Server,
+    T extends RouteClass<S>
+  >(
     // routeType: ControllerClass<T>,
-    routeType: T,
+    // routeType: T,
+    routeType: new (server: S) => T,
   ) {
-    const route = new routeType();
-    route.init(this);
+    // @ts-ignore
+    const route = new routeType(this as S);
+    // route.init(this);
     const router = express.Router();
     const routePrototype = Object.getPrototypeOf(route);
     // const baseRoute = Reflect.getMetadata('basePath', routePrototype);
@@ -92,38 +105,16 @@ export abstract class Server {
       const actionFn = route[actionFnName].bind(route);
 
       const handler = async (req: express.Request, res: express.Response) => {
-        const sendFn: SendFn<T> = <T>(
-          data: T,
-          error: Error = null,
-          code: number = 200,
-        ) => {
-          if (error) {
-            const errorResult = {
-              type: error.name,
-              message: error.message,
-            };
+        const context = this.contextFactory(req, res);
 
-            res.status(code).json({ error: errorResult });
-
-            return;
-          }
-
-          const response = {
-            data,
-          };
-
-          res.status(code).json(response);
-
-          actionLogger.info(response);
-        };
-
-        // @ts-ignore
-        await actionFn(req, sendFn, this);
+        try {
+          await actionFn(context);
+        } catch (error) {
+          context.error(error);
+        }
       };
 
       router[path.mimeType](path.path, middleware, handler);
-
-      console.log(router);
 
       this.logger.info(
         {
@@ -139,9 +130,14 @@ export abstract class Server {
     this.logger.info({ baseRoute }, 'Route Registered');
   }
 
-  public registerRoutes<T extends new () => RouteClass>(
+  public registerRoutes<
+    // T extends new <S extends Server>(server: S) => RouteClass<S>
+    S extends Server,
+    T extends RouteClass<S>
+  >(
     // routeTypes: ControllerClass<T>[],
-    routeTypes: T[],
+    // routeTypes: T[],
+    routeTypes: (new (server: S) => T)[],
   ) {
     for (const routeType of routeTypes) {
       this.registerRoute(routeType);

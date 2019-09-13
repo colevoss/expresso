@@ -2,48 +2,57 @@ import * as express from 'express';
 import { Route, RouteClass } from './Route';
 import { ValidateBody } from './ValidateBody';
 import { Schema } from 'schrema';
+import { Context } from './Context';
 import { Get, Post } from './Action';
-import { Server, SendFn } from './Server';
+import { Server } from './Server';
 import 'reflect-metadata';
-
-const app = express();
-app.use(express.json());
 
 class AdioServer extends Server {
   public name = 'AdioServer';
   public test = 'another hello';
+
+  public db: { test: string };
+
+  constructor() {
+    super();
+  }
+
+  public async created() {
+    this.db = { test: 'hello' };
+  }
+
+  public async started() {
+    this.logger.info('STARTED');
+  }
+}
+
+interface MyContext<B = {}, Q = {}> extends Context<B, Q> {
+  server: AdioServer;
 }
 
 // @Route('test')
-class TestRoute extends RouteClass {
+class TestRoute extends RouteClass<AdioServer> {
   public route = 'test';
 
   @Get('/hello')
   // @ValidateBody({ ball: Schema.string })
-  async hello(
-    req: express.Request,
-    send: SendFn<{ test: string }>,
-    server: AdioServer,
-  ) {
+  async hello(ctx: MyContext<{ test: string }>) {
     const data = {
-      test: server.test,
+      test: ctx.server.db.test,
     };
 
-    send(data);
-
-    this.logger.info(server.test, 'test');
-    // send(null, new Error('Test'), 404);
+    ctx.send(data);
   }
 }
 
-const start = () => {
+const start = async () => {
   // const adio = new AdioServer(3000);
   // const adio = AdioServer.create(3000, [TestController]);
-  const adio = AdioServer.create(3000);
+  const adio = await AdioServer.create([TestRoute]);
 
-  adio.registerRoutes([TestRoute]);
+  // adio.registerRoutes([TestRoute]);
 
-  adio.start();
+  adio.start(3000);
 };
 
 start();

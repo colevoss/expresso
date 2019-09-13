@@ -16,6 +16,7 @@ export class TestServer extends Server {}
 export class GetRoute extends RouteClass {
   public route = 'get';
   @Get('/')
+  // @ts-ignore
   baseGet(req: Request, send: SendFn<any>) {
     send({ getRequest: 'success' });
   }
