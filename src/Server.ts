@@ -4,14 +4,14 @@ import { Logger } from './Logger';
 import { Context } from './Context';
 import 'reflect-metadata';
 
-import { Controller, ControllerClass, IActionMetadata } from './types';
+import { Type, Controller, ControllerClass, IActionMetadata } from './types';
 import { Logger as ILogger } from 'pino';
 import { RouteClass } from './Route';
 
 export class Server {
   public name: string;
   public app: express.Application;
-  public routes: { [baseRoute: string]: Controller<any> };
+  // public routes: { [baseRoute: string]: Controller<any> };
   public logger: ILogger;
 
   constructor() {
@@ -20,7 +20,7 @@ export class Server {
   }
 
   static async create<S extends Server>(
-    this: { new (): S },
+    this: Type<S>,
     // routes?: ControllerClass<any>[],
     routes?: (new (server: S) => RouteClass<S>)[],
   ): Promise<S> {
@@ -70,7 +70,8 @@ export class Server {
   >(
     // routeType: ControllerClass<T>,
     // routeType: T,
-    routeType: new (server: S) => T,
+    // routeType: new (server: S) => T,
+    routeType: Type<T>,
   ) {
     // @ts-ignore
     const route = new routeType(this as S);
@@ -137,7 +138,8 @@ export class Server {
   >(
     // routeTypes: ControllerClass<T>[],
     // routeTypes: T[],
-    routeTypes: (new (server: S) => T)[],
+    // routeTypes: (new (server: S) => T)[],
+    routeTypes: Type<T>[],
   ) {
     for (const routeType of routeTypes) {
       this.registerRoute(routeType);

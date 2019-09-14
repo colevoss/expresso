@@ -1,5 +1,9 @@
 import { RequestHandler } from 'express';
 
+export interface Type<T> extends Function {
+  new (...args: any[]): T;
+}
+
 export type ControllerClass<T> = { new (): T };
 
 export type Controller<T> = InstanceType<ControllerClass<T>>;

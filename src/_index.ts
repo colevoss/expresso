@@ -31,7 +31,7 @@ interface MyContext<B = {}, Q = {}> extends Context<B, Q> {
 }
 
 // @Route('test')
-class TestRoute extends RouteClass<AdioServer> {
+class TestRoute extends RouteClass {
   public route = 'test';
 
   @Get('/hello')

@@ -13,7 +13,7 @@ export function Route(path: string) {
   };
 }
 
-export abstract class RouteClass<S extends Server> {
+export abstract class RouteClass<S extends Server = Server> {
   public route: string = '';
   // public logger: ILogger;
   public server: S;
