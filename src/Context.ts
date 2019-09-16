@@ -2,10 +2,6 @@ import { Request, Response } from 'express';
 import { Server } from './Server';
 import { Logger as ILogger } from 'pino';
 
-type IContextContstructor<T> = {
-  new (request: Request, response: Response, server: Server): T;
-};
-
 export class Context<Body = {}, Query = {}> {
   public params: { [key: string]: string };
   public body: Body;

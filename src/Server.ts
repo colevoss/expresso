@@ -11,7 +11,6 @@ import { RouteClass } from './Route';
 export class Server {
   public name: string;
   public app: express.Application;
-  // public routes: { [baseRoute: string]: Controller<any> };
   public logger: ILogger;
 
   constructor() {
@@ -21,12 +20,10 @@ export class Server {
 
   static async create<S extends Server>(
     this: Type<S>,
-    // routes?: ControllerClass<any>[],
-    routes?: (new (server: S) => RouteClass<S>)[],
+    routes?: (new () => RouteClass)[],
+    ...args: any[]
   ): Promise<S> {
-    const server = new this();
-
-    // server.bootstrapApp();
+    const server = new this(...args);
 
     if (routes) {
       server.registerRoutes(routes);
@@ -62,23 +59,10 @@ export class Server {
     });
   }
 
-  // public registerRoute<T>(routeType: ControllerClass<T>) {
-  public registerRoute<
-    // T extends new <S extends Server>(server: S) => RouteClass<S>
-    S extends Server,
-    T extends RouteClass<S>
-  >(
-    // routeType: ControllerClass<T>,
-    // routeType: T,
-    // routeType: new (server: S) => T,
-    routeType: Type<T>,
-  ) {
-    // @ts-ignore
-    const route = new routeType(this as S);
-    // route.init(this);
+  public registerRoute<T extends RouteClass>(routeType: Type<T>) {
+    const route = new routeType();
     const router = express.Router();
     const routePrototype = Object.getPrototypeOf(route);
-    // const baseRoute = Reflect.getMetadata('basePath', routePrototype);
     const baseRoute = '/' + route.route;
 
     const routeActions = Object.getOwnPropertyNames(routePrototype);
@@ -92,11 +76,6 @@ export class Server {
       if (!routeMetadata) continue;
 
       const { path, middleware = [] } = routeMetadata;
-
-      const actionLogger = this.logger.child({
-        method: path.mimeType.toUpperCase(),
-        route: `${baseRoute}${path.path}`,
-      });
 
       const actionFnName = routeAction as keyof InstanceType<
         ControllerClass<T>
@@ -131,16 +110,7 @@ export class Server {
     this.logger.info({ baseRoute }, 'Route Registered');
   }
 
-  public registerRoutes<
-    // T extends new <S extends Server>(server: S) => RouteClass<S>
-    S extends Server,
-    T extends RouteClass<S>
-  >(
-    // routeTypes: ControllerClass<T>[],
-    // routeTypes: T[],
-    // routeTypes: (new (server: S) => T)[],
-    routeTypes: Type<T>[],
-  ) {
+  public registerRoutes<T extends RouteClass>(routeTypes: Type<T>[]) {
     for (const routeType of routeTypes) {
       this.registerRoute(routeType);
     }

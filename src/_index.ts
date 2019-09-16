@@ -1,5 +1,5 @@
-import * as express from 'express';
-import { Route, RouteClass } from './Route';
+import { Request, Response } from 'express';
+import { RouteClass } from './Route';
 import { ValidateBody } from './ValidateBody';
 import { Schema } from 'schrema';
 import { Context } from './Context';
@@ -13,7 +13,7 @@ class AdioServer extends Server {
 
   public db: { test: string };
 
-  constructor() {
+  constructor(public someTest: string, public anotherTest: string) {
     super();
   }
 
@@ -30,15 +30,19 @@ interface MyContext<B = {}, Q = {}> extends Context<B, Q> {
   server: AdioServer;
 }
 
-// @Route('test')
 class TestRoute extends RouteClass {
   public route = 'test';
+
+  constructor(public test: string = 'HELLOOOOo') {
+    super();
+  }
 
   @Get('/hello')
   // @ValidateBody({ ball: Schema.string })
   async hello(ctx: MyContext<{ test: string }>) {
     const data = {
       test: ctx.server.db.test,
+      controllerTest: this.test,
     };
 
     ctx.send(data);
@@ -48,7 +52,7 @@ class TestRoute extends RouteClass {
 const start = async () => {
   // const adio = new AdioServer(3000);
   // const adio = AdioServer.create(3000, [TestController]);
-  const adio = await AdioServer.create([TestRoute]);
+  const adio = await AdioServer.create([TestRoute], 'HELLO', 'ANOTHER HELLo');
 
   // adio.registerRoutes([TestRoute]);
 
